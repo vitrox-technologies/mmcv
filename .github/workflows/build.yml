@@ -196,6 +196,12 @@ jobs:
 
   build_cuda_win:
     runs-on: windows-2019
+    env:
+      # CUDA: 10.1.105-1
+      # CUDA_SHORT: 10.1
+      # UBUNTU_VERSION: ubuntu1804
+      FORCE_CUDA: 1
+      MMCV_CUDA_ARGS: -gencode=arch=compute_61,code=sm_61
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
@@ -243,13 +249,20 @@ jobs:
             echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
-      - name: nvcc check
-        shell: powershell
-        run: |
-          nvcc -V
-          ls $env:CUDA_PATH
-          ls $env:CUDA_PATH\bin
-          ls $env:CUDA_PATH\include
+      # - name: nvcc check
+      #   shell: powershell
+      #   run: |
+      #     nvcc -V
+      #     ls $env:CUDA_PATH
+      #     ls $env:CUDA_PATH\bin
+      #     ls $env:CUDA_PATH\include
+      - name: Install PyTorch
+        run: pip install torch==1.7.0+cu102 torchvision==0.8.1+cu102 -f https://download.pytorch.org/whl/torch_stable.html
+      - name: Install unittest dependencies
+        run: pip install -r requirements.txt
+      - name: build
+        run: python setup.py build_ext
+
 
       # - name: Test Compiler
       #   shell: powershell
