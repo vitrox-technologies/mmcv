@@ -217,6 +217,32 @@ jobs:
               Write-Output "Error: Failed to download $($CUDA_REPO_PKG_LOCAL) from $($CUDA_REPO_PKG_REMOTE)"
               exit 1
           }
+
+          Write-Output "Installing CUDA $($CUDA_VERSION_FULL). Subpackages $($CUDA_PACKAGES)"
+          Start-Process -Wait -FilePath .\"$($CUDA_REPO_PKG_LOCAL)" -ArgumentList "-s $($CUDA_PACKAGES)"
+
+          # Check the return status of the CUDA installer.
+          if (!$?) {
+              Write-Output "Error: CUDA installer reported error. $($LASTEXITCODE)"
+              exit 1
+          }
+
+          # Store the CUDA_PATH in the environment for the current session, to be forwarded in the action.
+          $CUDA_PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$($CUDA_MAJOR).$($CUDA_MINOR)"
+          $CUDA_PATH_VX_Y = "CUDA_PATH_V10_2"
+          # Set environmental variables in this session
+          $env:CUDA_PATH = "$($CUDA_PATH)"
+          $env:CUDA_PATH_VX_Y = "$($CUDA_PATH_VX_Y)"
+          Write-Output "CUDA_PATH $($CUDA_PATH)"
+          Write-Output "CUDA_PATH_VX_Y $($CUDA_PATH_VX_Y)"
+      - name: nvcc check
+        shell: powershell
+        run: |
+          nvcc -V
+          ls $env:CUDA_PATH
+          ls $env:CUDA_PATH\bin
+          ls $env:CUDA_PATH\include
+
       # - name: Test Compiler
       #   shell: powershell
       #   run: |
