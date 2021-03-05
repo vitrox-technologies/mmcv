@@ -246,7 +246,7 @@ jobs:
       - name: Install unittest dependencies
         run: pip install -r requirements.txt
       - name: build
-        run: pip setup.py bdist_wheel
+        run: python setup.py bdist_wheel
 
       # - name: Test Compiler
       #   shell: powershell
