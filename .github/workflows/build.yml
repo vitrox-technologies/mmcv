@@ -207,7 +207,7 @@ jobs:
             visual_studio: "Visual Studio 16 2019"
             python-version: 3.7
             torch: 1.7.0+cu110
-            torchvision: 0.8.0+cu110
+            torchvision: 0.8.1+cu110
     env:
       build_dir: "build"
       config: "Release"
