@@ -251,7 +251,8 @@ jobs:
             }
           }
           popd
-          Write-Host "`nVisual Studio 2017 Command Prompt variables set." -ForegroundColor Yellow
+          Write-Host "`nVisual Studio 2019 Command Prompt variables set." -ForegroundColor Yellow
+          echo $env:Path
       - name: CL check
         run: |
           cl -V
