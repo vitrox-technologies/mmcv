@@ -205,6 +205,9 @@ jobs:
           - os: windows-2019
             cuda: "11.0.167"
             visual_studio: "Visual Studio 16 2019"
+            python-version: 3.7
+            torch: 1.7.0+cu110
+            torchvision: 0.8.0+cu110
     env:
       build_dir: "build"
       config: "Release"
@@ -238,6 +241,12 @@ jobs:
           ls $env:CUDA_PATH
           ls $env:CUDA_PATH\bin
           ls $env:CUDA_PATH\include
+      - name: Install PyTorch
+        run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
+      - name: Install unittest dependencies
+        run: pip install -r requirements.txt
+      - name: build
+        run: pip setup.py bdist_wheel
 
       # - name: Test Compiler
       #   shell: powershell
