@@ -219,10 +219,13 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-        with:
-          vs-version: '[16.8,16.9)'
+      - name: Setup cl.exe
+        uses: ilammy/msvc-dev-cmd@v1
+        arch: x64
+      - name: Setup cl.exe
+        shell: powershell
+        run: cl
+
       # - name: Install CUDA
       #   env:
       #     cuda: ${{ matrix.cuda }}
@@ -245,8 +248,6 @@ jobs:
       #     ls $env:CUDA_PATH
       #     ls $env:CUDA_PATH\bin
       #     ls $env:CUDA_PATH\include
-      - name: Setup Visual Studio
-        run: cl
       # - name: Install PyTorch
       #   run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
       # - name: Install unittest dependencies
