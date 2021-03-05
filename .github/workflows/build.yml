@@ -196,10 +196,18 @@ jobs:
 
   build_cuda_win:
     runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      # explicit include-based build matrix, of known valid options
+      matrix:
+        include:
+          # Windows2019 & VS 2019 supports 10.1+
+          - os: windows-2019
+            cuda: "11.0.167"
+            visual_studio: "Visual Studio 16 2019"
     env:
-      # CUDA: 10.1.105-1
-      # CUDA_SHORT: 10.1
-      # UBUNTU_VERSION: ubuntu1804
+      build_dir: "build"
+      config: "Release"
       FORCE_CUDA: 1
       MMCV_CUDA_ARGS: -gencode=arch=compute_61,code=sm_61
     steps:
@@ -209,39 +217,13 @@ jobs:
         with:
           python-version: 3.7
       - name: Install CUDA
+        env:
+          cuda: ${{ matrix.cuda }}
+          visual_studio: ${{ matrix.visual_studio }}
         shell: powershell
         run: |
-          $CUDA_VERSION_FULL = "10.2"
-          $CUDA_REPO_PKG_LOCAL = "cuda_$($CUDA_VERSION_FULL)_win10_network.exe"
-          $CUDA_REPO_PKG_REMOTE = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/network_installers/cuda_10.2.89_win10_network.exe"
-
-          Write-Output "Downloading CUDA Network Installer for $($CUDA_VERSION_FULL) from: $($CUDA_REPO_PKG_REMOTE)"
-          Invoke-WebRequest $CUDA_REPO_PKG_REMOTE -OutFile $CUDA_REPO_PKG_LOCAL | Out-Null
-          if(Test-Path -Path $CUDA_REPO_PKG_LOCAL){
-              Write-Output "Downloading Complete"
-          } else {
-              Write-Output "Error: Failed to download $($CUDA_REPO_PKG_LOCAL) from $($CUDA_REPO_PKG_REMOTE)"
-              exit 1
-          }
-
-          Write-Output "Installing CUDA $($CUDA_VERSION_FULL). Subpackages $($CUDA_PACKAGES)"
-          Start-Process -Wait -FilePath .\"$($CUDA_REPO_PKG_LOCAL)" -ArgumentList "-s $($CUDA_PACKAGES)"
-
-          # Check the return status of the CUDA installer.
-          if (!$?) {
-              Write-Output "Error: CUDA installer reported error. $($LASTEXITCODE)"
-              exit 1
-          }
-
-          # Store the CUDA_PATH in the environment for the current session, to be forwarded in the action.
-          $CUDA_PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$($CUDA_MAJOR).$($CUDA_MINOR)"
-          $CUDA_PATH_VX_Y = "CUDA_PATH_V10_2"
-          # Set environmental variables in this session
-          $env:CUDA_PATH = "$($CUDA_PATH)"
-          $env:CUDA_PATH_VX_Y = "$($CUDA_PATH_VX_Y)"
-          Write-Output "CUDA_PATH $($CUDA_PATH)"
-          Write-Output "CUDA_PATH_VX_Y $($CUDA_PATH_VX_Y)"
-
+          # Install CUDA via a powershell script
+          .\scripts\actions\install_cuda_windows.ps1
           if ($?) {
             # Set paths for subsequent steps, using $env:CUDA_PATH
             echo "Adding CUDA to CUDA_PATH, CUDA_PATH_X_Y and PATH"
@@ -249,20 +231,13 @@ jobs:
             echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
-      # - name: nvcc check
-      #   shell: powershell
-      #   run: |
-      #     nvcc -V
-      #     ls $env:CUDA_PATH
-      #     ls $env:CUDA_PATH\bin
-      #     ls $env:CUDA_PATH\include
-      - name: Install PyTorch
-        run: pip install torch==1.7.0+cu102 torchvision==0.8.1+cu102 -f https://download.pytorch.org/whl/torch_stable.html
-      - name: Install unittest dependencies
-        run: pip install -r requirements.txt
-      - name: build
-        run: python setup.py build_ext
-
+      - name: nvcc check
+        shell: powershell
+        run: |
+          nvcc -V
+          ls $env:CUDA_PATH
+          ls $env:CUDA_PATH\bin
+          ls $env:CUDA_PATH\include
 
       # - name: Test Compiler
       #   shell: powershell
