@@ -221,7 +221,8 @@ jobs:
           python-version: 3.7
       - name: Setup cl.exe
         uses: ilammy/msvc-dev-cmd@v1
-        arch: x64
+        with:
+          arch: x64
       - name: Setup cl.exe
         shell: powershell
         run: cl
