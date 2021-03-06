@@ -32,6 +32,8 @@ $CUDA_PACKAGES_IN = @(
     "curand_dev";
     "cusparse_dev";
     "nvrtc_dev";
+    "cublas_dev";
+    "cusolver_dev";
     "cudart";
 )
 
