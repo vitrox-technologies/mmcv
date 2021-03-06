@@ -197,18 +197,48 @@ jobs:
   build_cuda_win:
     runs-on: windows-2019
     strategy:
-      fail-fast: false
-      # explicit include-based build matrix, of known valid options
+      fail-fast: true
       matrix:
         include:
-          # Windows2019 & VS 2019 supports 10.1+
-          - os: windows-2019
-            cuda: "11.0.167"
-            visual_studio: "Visual Studio 16 2019"
+          - cuda: "11.0.167"
+            python-version: 3.6
+            torch: 1.7.1+cu110
+            torchvision: 0.8.2+cu110
+          - cuda: "10.2.89"
+            python-version: 3.6
+            torch: 1.7.1+cu102
+            torchvision: 0.8.2+cu102
+          - cuda: "10.1.243"
+            python-version: 3.6
+            torch: 1.7.1+cu101
+            torchvision: 0.8.2+cu101
+          - cuda: "11.0.167"
             python-version: 3.7
-            torch: 1.7.0+cu110
-            torchvision: 0.8.1+cu110
+            torch: 1.7.1+cu110
+            torchvision: 0.8.2+cu110
+          - cuda: "10.2.89"
+            python-version: 3.7
+            torch: 1.7.1+cu102
+            torchvision: 0.8.2+cu102
+          - cuda: "10.1.243"
+            python-version: 3.7
+            torch: 1.7.1+cu101
+            torchvision: 0.8.2+cu101
+          - cuda: "11.0.167"
+            python-version: 3.8
+            torch: 1.7.1+cu110
+            torchvision: 0.8.2+cu110
+          - cuda: "10.2.89"
+            python-version: 3.8
+            torch: 1.7.1+cu102
+            torchvision: 0.8.2+cu102
+          - cuda: "10.1.243"
+            python-version: 3.8
+            torch: 1.7.1+cu101
+            torchvision: 0.8.2+cu101
     env:
+      os: windows-2019
+      visual_studio: "Visual Studio 16 2019"
       build_dir: "build"
       config: "Release"
       FORCE_CUDA: 1
@@ -239,13 +269,6 @@ jobs:
             echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
-      # - name: nvcc check
-      #   shell: powershell
-      #   run: |
-      #     nvcc -V
-      #     ls $env:CUDA_PATH
-      #     ls $env:CUDA_PATH\bin
-      #     ls $env:CUDA_PATH\include
       - name: Install PyTorch
         run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install unittest dependencies
@@ -254,11 +277,6 @@ jobs:
           pip install wheel
       - name: build
         run: python setup.py bdist_wheel
-
-      # - name: Test Compiler
-      #   shell: powershell
-      #   run: |
-      #     cl
 
   # build_macos:
   #   runs-on: macos-latest
