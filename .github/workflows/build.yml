@@ -272,7 +272,7 @@ jobs:
       - name: Install PyTorch
         run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
       - name: Patch Pytorch
-        if: ${{matrix.cuda == '10.2.89' or matrix.cuda == '10.1.243'}}
+        if: ${{matrix.cuda == '10.2.89' || matrix.cuda == '10.1.243'}}
         shell: bash
         run: |
           SITE=$(python -m site --user-site)/torch
