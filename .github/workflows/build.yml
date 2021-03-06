@@ -206,8 +206,8 @@ jobs:
             torchvision: 0.8.2+cu110
           - cuda: "10.2.89"
             python-version: 3.6
-            torch: 1.7.1+cu102
-            torchvision: 0.8.2+cu102
+            torch: 1.7.1
+            torchvision: 0.8.2
           - cuda: "10.1.243"
             python-version: 3.6
             torch: 1.7.1+cu101
@@ -218,8 +218,8 @@ jobs:
             torchvision: 0.8.2+cu110
           - cuda: "10.2.89"
             python-version: 3.7
-            torch: 1.7.1+cu102
-            torchvision: 0.8.2+cu102
+            torch: 1.7.1
+            torchvision: 0.8.2
           - cuda: "10.1.243"
             python-version: 3.7
             torch: 1.7.1+cu101
@@ -230,8 +230,8 @@ jobs:
             torchvision: 0.8.2+cu110
           - cuda: "10.2.89"
             python-version: 3.8
-            torch: 1.7.1+cu102
-            torchvision: 0.8.2+cu102
+            torch: 1.7.1
+            torchvision: 0.8.2
           - cuda: "10.1.243"
             python-version: 3.8
             torch: 1.7.1+cu101
