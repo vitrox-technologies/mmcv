@@ -213,6 +213,7 @@ jobs:
       config: "Release"
       FORCE_CUDA: 1
       MMCV_CUDA_ARGS: -gencode=arch=compute_61,code=sm_61
+      DISTUTILS_USE_SDK: 1
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
