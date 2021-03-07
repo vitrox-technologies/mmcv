@@ -288,9 +288,13 @@ def get_extensions():
     return extensions
 
 
+name = 'vitrox-mmcv'
+if os.getenv('MMCV_WITH_OPS', '0') == '1':
+    name = 'vitrox-mmcv-full'
+
 setup(
-    name='mmcv' if os.getenv('MMCV_WITH_OPS', '0') == '0' else 'mmcv-full',
-    version=get_version(),
+    name=name,
+    version=get_version() + '+' + os.environ.get('mmcv_version', ''),
     description='OpenMMLab Computer Vision Foundation',
     keywords='computer vision',
     packages=find_packages(),

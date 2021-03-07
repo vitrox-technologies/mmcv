@@ -253,47 +253,47 @@ jobs:
       - name: Env
         shell: powershell
         run: |
-          $env:version = "${{ matrix.torch }}"
+          $env:mmcv_version = "${{ matrix.torch }}"
           Write-Host $version
-      # - name: Setup cl.exe
-      #   uses: ilammy/msvc-dev-cmd@v1
-      #   with:
-      #     arch: x64
-      # - name: Install CUDA
-      #   env:
-      #     cuda: ${{ matrix.cuda }}
-      #     visual_studio: ${{ matrix.visual_studio }}
-      #   shell: powershell
-      #   run: |
-      #     # Install CUDA via a powershell script
-      #     .\scripts\actions\install_cuda_windows.ps1
-      #     if ($?) {
-      #       # Set paths for subsequent steps, using $env:CUDA_PATH
-      #       echo "Adding CUDA to CUDA_PATH, CUDA_PATH_X_Y and PATH"
-      #       echo "CUDA_PATH=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      #       echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      #       echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      #     }
-      # - name: Install PyTorch
-      #   run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
-      # - name: Patch Pytorch
-      #   if: ${{matrix.cuda == '10.2.89' || matrix.cuda == '10.1.243'}}
-      #   shell: bash
-      #   run: |
-      #     SITE="C:\hostedtoolcache\windows\Python\3.7.9\x64\lib\site-packages"
-      #     sed -i.bak -e 's/CONSTEXPR_EXCEPT_WIN_CUDA/const/g' "${SITE}/torch/include/torch/csrc/jit/api/module.h"
-      #     sed -i.bak -e 's/return \*(this->value)/return \*((type\*)this->value)/g' "${SITE}/torch/include/pybind11/cast.h"
-      #     sed -i.bak '/static constexpr Symbol Kind/d' "${SITE}/torch/include/torch/csrc/jit/ir/ir.h"
-      # - name: Install dependencies
-      #   run: |
-      #     pip install -r requirements.txt
-      #     pip install wheel
-      # - name: build
-      #   run: python setup.py bdist_wheel
-      # - name: Publish distribution to PyPI
-      #   run: |
-      #     pip install twine
-      #     twine upload dist/* -u __token__ -p ${{ secrets.pypi_password }}
+      - name: Setup cl.exe
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Install CUDA
+        env:
+          cuda: ${{ matrix.cuda }}
+          visual_studio: ${{ matrix.visual_studio }}
+        shell: powershell
+        run: |
+          # Install CUDA via a powershell script
+          .\scripts\actions\install_cuda_windows.ps1
+          if ($?) {
+            # Set paths for subsequent steps, using $env:CUDA_PATH
+            echo "Adding CUDA to CUDA_PATH, CUDA_PATH_X_Y and PATH"
+            echo "CUDA_PATH=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+      - name: Install PyTorch
+        run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
+      - name: Patch Pytorch
+        if: ${{matrix.cuda == '10.2.89' || matrix.cuda == '10.1.243'}}
+        shell: bash
+        run: |
+          SITE="C:\hostedtoolcache\windows\Python\3.7.9\x64\lib\site-packages"
+          sed -i.bak -e 's/CONSTEXPR_EXCEPT_WIN_CUDA/const/g' "${SITE}/torch/include/torch/csrc/jit/api/module.h"
+          sed -i.bak -e 's/return \*(this->value)/return \*((type\*)this->value)/g' "${SITE}/torch/include/pybind11/cast.h"
+          sed -i.bak '/static constexpr Symbol Kind/d' "${SITE}/torch/include/torch/csrc/jit/ir/ir.h"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install wheel
+      - name: build
+        run: python setup.py bdist_wheel
+      - name: Publish distribution to PyPI
+        run: |
+          pip install twine
+          twine upload dist/* -u __token__ -p ${{ secrets.pypi_password }}
 
   # build_macos:
   #   runs-on: macos-latest
