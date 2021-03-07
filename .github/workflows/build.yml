@@ -253,7 +253,7 @@ jobs:
       - name: Env
         shell: powershell
         run: |
-          $env:version = ${{ matrix.torch }}
+          $env:version = "${{ matrix.torch }}"
           Write-Host $version
       # - name: Setup cl.exe
       #   uses: ilammy/msvc-dev-cmd@v1
