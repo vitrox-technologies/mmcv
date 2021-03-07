@@ -280,7 +280,7 @@ jobs:
         if: ${{matrix.cuda == '10.2.89' || matrix.cuda == '10.1.243'}}
         shell: bash
         run: |
-          SITE="C:\hostedtoolcache\windows\Python\3.7.9\x64\lib\site-packages"
+          SITE="$(python -c 'import torch; print(torch.__file__[:-18])')"
           sed -i.bak -e 's/CONSTEXPR_EXCEPT_WIN_CUDA/const/g' "${SITE}/torch/include/torch/csrc/jit/api/module.h"
           sed -i.bak -e 's/return \*(this->value)/return \*((type\*)this->value)/g' "${SITE}/torch/include/pybind11/cast.h"
           sed -i.bak '/static constexpr Symbol Kind/d' "${SITE}/torch/include/torch/csrc/jit/ir/ir.h"
@@ -289,9 +289,12 @@ jobs:
           pip install -r requirements.txt
           pip install wheel
       - name: build
-        run: python setup.py bdist_wheel
+        run: |
+          $env:mmcv_version = "${{ matrix.torch }}"
+          python setup.py bdist_wheel
       - name: Publish distribution to PyPI
         run: |
+          $env:mmcv_version = "${{ matrix.torch }}"
           pip install twine
           twine upload --repository testpypi dist/* -u __token__ -p ${{ secrets.pypi_password }}
 
