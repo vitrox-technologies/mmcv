@@ -294,7 +294,8 @@ if os.getenv('MMCV_WITH_OPS', '0') == '1':
 
 setup(
     name=name,
-    version=get_version() + '+' + os.environ.get('mmcv_version', ''),
+    version=get_version() + '_' +
+    os.environ.get('mmcv_version', '').replace('+', '_'),
     description='OpenMMLab Computer Vision Foundation',
     keywords='computer vision',
     packages=find_packages(),
