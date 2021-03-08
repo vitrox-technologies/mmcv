@@ -257,7 +257,7 @@ jobs:
           - cuda: "11.0.167"
             python-version: 3.6
             torch: 1.7.0+cu110
-            torchvision: 0.8.0+cu110
+            torchvision: 0.8.0
             cuda_ver: cu110
             torch_ver: 1.7.0
           - cuda: "10.2.89"
@@ -269,13 +269,13 @@ jobs:
           - cuda: "10.1.243"
             python-version: 3.6
             torch: 1.7.0+cu101
-            torchvision: 0.8.0+cu101
+            torchvision: 0.8.0
             cuda_ver: cu101
             torch_ver: 1.7.0
           - cuda: "11.0.167"
             python-version: 3.7
             torch: 1.7.0+cu110
-            torchvision: 0.8.0+cu110
+            torchvision: 0.8.0
             cuda_ver: cu110
             torch_ver: 1.7.0
           - cuda: "10.2.89"
@@ -287,13 +287,13 @@ jobs:
           - cuda: "10.1.243"
             python-version: 3.7
             torch: 1.7.0+cu101
-            torchvision: 0.8.0+cu101
+            torchvision: 0.8.0
             cuda_ver: cu101
             torch_ver: 1.7.0
           - cuda: "11.0.167"
             python-version: 3.8
             torch: 1.7.0+cu110
-            torchvision: 0.8.0+cu110
+            torchvision: 0.8.0
             cuda_ver: cu110
             torch_ver: 1.7.0
           - cuda: "10.2.89"
@@ -305,7 +305,7 @@ jobs:
           - cuda: "10.1.243"
             python-version: 3.8
             torch: 1.7.0+cu101
-            torchvision: 0.8.0+cu101
+            torchvision: 0.8.0
             cuda_ver: cu101
             torch_ver: 1.7.0
           - cuda: "10.2.89"
@@ -317,7 +317,7 @@ jobs:
           - cuda: "10.1.243"
             python-version: 3.6
             torch: 1.6.0+cu101
-            torchvision: 0.8.0+cu101
+            torchvision: 0.7.0+cu101
             cuda_ver: cu101
             torch_ver: 1.6.0
           - cuda: "10.2.89"
