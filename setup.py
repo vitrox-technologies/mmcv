@@ -289,7 +289,8 @@ def get_extensions():
 
 
 setup(
-    name='mmcv' if os.getenv('MMCV_WITH_OPS', '0') == '0' else 'mmcv-full',
+    name='vitrox-mmcv'
+    if os.getenv('MMCV_WITH_OPS', '0') == '0' else 'vitrox-mmcv-full',
     version=get_version(),
     description='OpenMMLab Computer Vision Foundation',
     keywords='computer vision',
