@@ -39,6 +39,7 @@ jobs:
 
   build_cuda_win:
     runs-on: windows-2019
+    if: startsWith(github.event.ref, 'refs/tags')
     strategy:
       fail-fast: false
       matrix:
