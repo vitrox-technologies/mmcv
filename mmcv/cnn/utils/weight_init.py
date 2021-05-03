@@ -1,4 +1,7 @@
 # Copyright (c) Open-MMLab. All rights reserved.
+import copy
+import warnings
+
 import numpy as np
 import torch.nn as nn
 
@@ -78,6 +81,7 @@ def bias_init_with_prob(prior_prob):
 class BaseInit(object):
 
     def __init__(self, *, bias=0, bias_prob=None, layer=None):
+        self.wholemodule = False
         if not isinstance(bias, (int, float)):
             raise TypeError(f'bias must be a numbel, but got a {type(bias)}')
 
@@ -90,7 +94,11 @@ class BaseInit(object):
             if not isinstance(layer, (str, list)):
                 raise TypeError(f'layer must be a str or a list of str, \
                     but got a {type(layer)}')
-
+        else:
+            layer = []
+            warnings.warn(
+                'init_cfg without layer key, if you do not define override'
+                ' key either, this init_cfg will do nothing')
         if bias_prob is not None:
             self.bias = bias_init_with_prob(bias_prob)
         else:
@@ -119,13 +127,12 @@ class ConstantInit(BaseInit):
     def __call__(self, module):
 
         def init(m):
-            if self.layer is None:
+            if self.wholemodule:
                 constant_init(m, self.val, self.bias)
             else:
                 layername = m.__class__.__name__
-                for layer_ in self.layer:
-                    if layername == layer_:
-                        constant_init(m, self.val, self.bias)
+                if layername in self.layer:
+                    constant_init(m, self.val, self.bias)
 
         module.apply(init)
 
@@ -157,13 +164,12 @@ class XavierInit(BaseInit):
     def __call__(self, module):
 
         def init(m):
-            if self.layer is None:
+            if self.wholemodule:
                 xavier_init(m, self.gain, self.bias, self.distribution)
             else:
                 layername = m.__class__.__name__
-                for layer_ in self.layer:
-                    if layername == layer_:
-                        xavier_init(m, self.gain, self.bias, self.distribution)
+                if layername in self.layer:
+                    xavier_init(m, self.gain, self.bias, self.distribution)
 
         module.apply(init)
 
@@ -194,7 +200,7 @@ class NormalInit(BaseInit):
     def __call__(self, module):
 
         def init(m):
-            if self.layer is None:
+            if self.wholemodule:
                 normal_init(m, self.mean, self.std, self.bias)
             else:
                 layername = m.__class__.__name__
@@ -231,13 +237,12 @@ class UniformInit(BaseInit):
     def __call__(self, module):
 
         def init(m):
-            if self.layer is None:
+            if self.wholemodule:
                 uniform_init(m, self.a, self.b, self.bias)
             else:
                 layername = m.__class__.__name__
-                for layer_ in self.layer:
-                    if layername == layer_:
-                        uniform_init(m, self.a, self.b, self.bias)
+                if layername in self.layer:
+                    uniform_init(m, self.a, self.b, self.bias)
 
         module.apply(init)
 
@@ -285,17 +290,32 @@ class KaimingInit(BaseInit):
     def __call__(self, module):
 
         def init(m):
-            if self.layer is None:
+            if self.wholemodule:
                 kaiming_init(m, self.a, self.mode, self.nonlinearity,
                              self.bias, self.distribution)
             else:
                 layername = m.__class__.__name__
-                for layer_ in self.layer:
-                    if layername == layer_:
-                        kaiming_init(m, self.a, self.mode, self.nonlinearity,
-                                     self.bias, self.distribution)
+                if layername in self.layer:
+                    kaiming_init(m, self.a, self.mode, self.nonlinearity,
+                                 self.bias, self.distribution)
 
         module.apply(init)
+
+
+@INITIALIZERS.register_module(name='Caffe2Xavier')
+class Caffe2XavierInit(KaimingInit):
+    # `XavierFill` in Caffe2 corresponds to `kaiming_uniform_` in PyTorch
+    # Acknowledgment to FAIR's internal code
+    def __init__(self, **kwargs):
+        super().__init__(
+            a=1,
+            mode='fan_in',
+            nonlinearity='leaky_relu',
+            distribution='uniform',
+            **kwargs)
+
+    def __call__(self, module):
+        super().__call__(module)
 
 
 @INITIALIZERS.register_module(name='Pretrained')
@@ -339,12 +359,16 @@ class PretrainedInit(object):
             load_state_dict(module, state_dict, strict=False, logger=logger)
 
 
-def _initialize(module, cfg):
+def _initialize(module, cfg, wholemodule=False):
     func = build_from_cfg(cfg, INITIALIZERS)
+    # wholemodule flag is for override mode, there is no layer key in override
+    # and initializer will give init values for the whole module with the name
+    # in override.
+    func.wholemodule = wholemodule
     func(module)
 
 
-def _initialize_override(module, override):
+def _initialize_override(module, override, cfg):
     if not isinstance(override, (dict, list)):
         raise TypeError(f'override must be a dict or a list of dict, \
                 but got {type(override)}')
@@ -352,11 +376,26 @@ def _initialize_override(module, override):
     override = [override] if isinstance(override, dict) else override
 
     for override_ in override:
-        name = override_.pop('name', None)
+
+        cp_override = copy.deepcopy(override_)
+        name = cp_override.pop('name', None)
+        if name is None:
+            raise ValueError('`override` must contain the key "name",'
+                             f'but got {cp_override}')
+        # if override only has name kay, it means use args in init_cfg
+        if not cp_override:
+            cp_override.update(cfg)
+        # if override has name key and other args except type key, it will
+        # raise error
+        elif 'type' not in cp_override.keys():
+            raise ValueError(
+                f'`override` need "type" key, but got {cp_override}')
+
         if hasattr(module, name):
-            _initialize(getattr(module, name), override_)
+            _initialize(getattr(module, name), cp_override, wholemodule=True)
         else:
-            raise RuntimeError(f'module did not have attribute {name}')
+            raise RuntimeError(f'module did not have attribute {name}, '
+                               f'but init_cfg is {cp_override}.')
 
 
 def initialize(module, init_cfg):
@@ -368,10 +407,9 @@ def initialize(module, init_cfg):
             define initializer. OpenMMLab has implemented 6 initializers
             including ``Constant``, ``Xavier``, ``Normal``, ``Uniform``,
             ``Kaiming``, and ``Pretrained``.
-
     Example:
         >>> module = nn.Linear(2, 3, bias=True)
-        >>> init_cfg = dict(type='Constant', val =1 , bias =2)
+        >>> init_cfg = dict(type='Constant', layer='Linear', val =1 , bias =2)
         >>> initialize(module, init_cfg)
 
         >>> module = nn.Sequential(nn.Conv1d(3, 1, 3), nn.Linear(1,2))
@@ -381,11 +419,7 @@ def initialize(module, init_cfg):
                 dict(type='Constant', layer='Linear', val=2)]
         >>> initialize(module, init_cfg)
 
-        >>> # Omitting ``'layer'`` initialize module with same configuration
-        >>> init_cfg = dict(type='Constant', val=1, bias=2)
-        >>> initialize(module, init_cfg)
-
-        >>> # define key``'override'`` to initialize some specific override in
+        >>> # define key``'override'`` to initialize some specific part in
         >>> # module
         >>> class FooNet(nn.Module):
         >>>     def __init__(self):
@@ -394,7 +428,7 @@ def initialize(module, init_cfg):
         >>>         self.reg = nn.Conv2d(16, 10, 3)
         >>>         self.cls = nn.Conv2d(16, 5, 3)
         >>> model = FooNet()
-        >>> init_cfg = dict(type='Constant', val=1, bias=2,
+        >>> init_cfg = dict(type='Constant', val=1, bias=2, layer='Conv2d',
         >>>     override=dict(type='Constant', name='reg', val=3, bias=4))
         >>> initialize(model, init_cfg)
 
@@ -420,11 +454,17 @@ def initialize(module, init_cfg):
         init_cfg = [init_cfg]
 
     for cfg in init_cfg:
-        override = cfg.pop('override', None)
-        _initialize(module, cfg)
+        # should deeply copy the original config because cfg may be used by
+        # other modules, e.g., one init_cfg shared by multiple bottleneck
+        # blocks, the expected cfg will be changed after pop and will change
+        # the initialization behavior of other modules
+        cp_cfg = copy.deepcopy(cfg)
+        override = cp_cfg.pop('override', None)
+        _initialize(module, cp_cfg)
 
         if override is not None:
-            _initialize_override(module, override)
+            cp_cfg.pop('layer', None)
+            _initialize_override(module, override, cp_cfg)
         else:
             # All attributes in module have same initialization.
             pass
